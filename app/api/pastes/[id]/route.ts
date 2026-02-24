@@ -2,9 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { getNowMs } from "@/lib/time";
 import { fetchAndCountView } from "@/lib/paste";
 
-export async function GET(req: NextRequest, ctx: { params: { id: string } }) {
-  const id = ctx.params.id;
-
+export async function GET(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
   const nowMs = getNowMs(req);
   const result = await fetchAndCountView(id, nowMs);
 
