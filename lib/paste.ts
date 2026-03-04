@@ -41,9 +41,11 @@ return {1, content or "", expiresAt or "", maxViews or "", tostring(newViews)}
 
 export async function fetchAndCountView(id: string, nowMs: number): Promise<PasteFetchResult> {
   const key = `paste:${id}`;
-
-  // @upstash/redis supports eval
-  const res = (await redis.eval(LUA_FETCH_AND_INCREMENT, [key], [String(nowMs)])) as unknown;
+ 
+  const res = (await redis.eval(LUA_FETCH_AND_INCREMENT, {
+  keys: [key],
+  arguments: [String(nowMs)],
+})) as unknown;
 
   // Expect array: [flag, content, expiresAt, maxViews, newViews]
   if (!Array.isArray(res) || res.length < 1) return { ok: false };
@@ -78,7 +80,7 @@ export async function createPaste(args: {
     typeof args.ttlSeconds === "number" ? args.nowMs + args.ttlSeconds * 1000 : null;
 
   // Store as Redis Hash
-  await redis.hset(key, {
+  await redis.hSet(key, {
     content: args.content,
     createdAtMs: String(args.nowMs),
     expiresAtMs: expiresAtMs === null ? "" : String(expiresAtMs),
